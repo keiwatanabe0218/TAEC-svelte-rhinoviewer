@@ -147,7 +147,7 @@ svelte({
 ## 4. ビューアーを追加
 - `src/lib/Viewer.svelte`を追加
 ### Viewer.svelte
-```
+```svelte
 <script>
     import { onMount, setContext } from "svelte";
     import { Card, Loading } from "attractions";
@@ -373,7 +373,7 @@ let camera;
 ## 2. コントロールを追加
 - `src/lib`内に`Panel.svelte`を作成
 ### Panel.svelte
-```
+```svelte
 <script>
     import { getContext } from "svelte";
     import { Card, FileDropzone } from "attractions";

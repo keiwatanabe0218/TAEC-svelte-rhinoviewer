@@ -1,30 +1,35 @@
 <script>
-	export let name;
+	import Header from "./lib/Header.svelte";
+	import Footer from "./lib/Footer.svelte"
+	import Viewer from "./lib/Viewer.svelte";
+	import Panel from "./lib/Panel.svelte";
 </script>
-
+  
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-</main>
-
-<style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
+	<Header />
+	<div class="container">
+	  <div class="viewer">
+		<Viewer>
+			<Panel slot="leftSidebar" />
+		</Viewer>
+	  </div>
+	</div>
+	<footer_child />
+	<div class="footer">
+	  <Footer />
+	</div>
+  </main>
+  
+  <style>
+	.viewer{
+	  z-index: 2;
+	  width: 100%;
+	  height: 100%;
 	}
-
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
+  
+	.footer{
+	  float: bottom;
+	  width: 100%;
 	}
-
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
-</style>
+  
+  </style>

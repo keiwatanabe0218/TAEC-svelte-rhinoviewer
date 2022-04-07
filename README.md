@@ -4,10 +4,10 @@
 # 環境
 - VSCode
 - Node.js v14.16.1
-    - svelte 3.0.0
-    - rhino3dm 7.14.0
-    - attractions 3.7.0
-    - three 0.139.2
+    - svelte v3.0.0
+    - rhino3dm v7.14.0
+    - attractions v3.7.0
+    - three v0.139.2
 
 # Svelteとは
 https://svelte.dev/
@@ -25,16 +25,16 @@ npm run dev
 <img width="1671" alt="svelte-helloworld" src="https://user-images.githubusercontent.com/45413802/161876725-555240d9-9e7e-4eba-a218-d8cff06e6b37.png">
 
 # rhino3dmを使う
-## パッケージをインストール
+## 1. パッケージをインストール
 ```
 npm i --save-dev rhino3dm three --save-dev
 npm i --save-dev attractions svelte-preprocess sass postcss --save-dev
 npm i rollup-plugin-node-builtins rollup-plugin-node-globals --save-dev
 ```
-## wasmを移動
+## 2. wasmを移動
 
 - `node_modules/rhino3dm`内の`rhino3dm.wasm`を`public/build`にコピペ
-## Header/Footerを追加
+## 3. Header/Footerを追加
 - `src/lib`内に`Header.svelte`と`Footer.svelte`を追加
 ### Header.svelte
 ```svelte
@@ -144,20 +144,339 @@ svelte({
 ```
 <img width="1674" alt="スクリーンショット 2022-04-06 10 58 56" src="https://user-images.githubusercontent.com/45413802/161880550-77dcb466-5406-467e-b13c-923bd150f247.png">
 
-## ビューアーを追加
+## 4. ビューアーを追加
 - `src/lib/Viewer.svelte`を追加
+### Viewer.svelte
 ```
+<script>
+    import { onMount, setContext } from "svelte";
+    import { Card, Loading } from "attractions";
+    import {
+      AmbientLight,
+      AxesHelper,
+      DirectionalLight,
+      GridHelper,
+      PerspectiveCamera,
+      Scene,
+      WebGLRenderer,
+      Object3D,
+    } from "three";
+    import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+    import rhino3dm from "rhino3dm";
+    import {key as sceneKey} from "./key";
+  
+    let canvasWidth;
+    let canvasHeight;
+    let canvas;
+    export let width = "100%";
+    export let height = "80vh";
+  
+    let scene;
+    let camera;
+    let renderer;
+    let controls;
+    Object3D.DefaultUp.set(0, 0, 1);
+  
+    const _sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  
+    onMount(() => {
+      load_model;
+    });
+  
+    const load_model = new Promise((resolve, reject) => {
+      rhino3dm().then(async (m) => {
+        await _sleep(2000);
+        console.log("Loaded rhino3dm.");
+        let rhino = m;
+        await init();
+        resolve();
+      });
+    });
 
+  
+    const init = () => {
+      // create the Three.js scene
+      // Three.jsのシーン作成
+      scene = new Scene();
+  
+      // creates the camera
+      // カメラ（ユーザーの視点）の作成
+      camera = new PerspectiveCamera(75, canvasWidth / canvasHeight);
+      camera.position.z = 15;
+      camera.position.y = 13;
+      camera.position.x = 8;
+  
+      // define the color of light
+      // ライトの色を設定
+      const lightColor = 0xffffff;
+  
+      // create the ambientLight（環境光の作成）
+      const ambientLight = new AmbientLight(lightColor, 0.5);
+      scene.add(ambientLight);
+  
+      const directionalLight = new DirectionalLight(
+        lightColor,
+        1
+      );
+      directionalLight.position.set(0, 10, 0);
+      directionalLight.target.position.set(-5, 0, 0);
+      scene.add(directionalLight);
+      scene.add(directionalLight.target);
+  
+      renderer = new WebGLRenderer({
+        canvas,
+        alpha: true,
+      });
+      renderer.setSize(canvasWidth, canvasHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const grid = new GridHelper(50, 30);
+      grid.rotateX(Math.PI / 2); 
+      scene.add(grid);
+  
+      const axes = new AxesHelper();
+      axes.material.depthTest = false;
+      axes.renderOrder = 1;
+      axes.rotateX(Math.PI / 2); 
+      scene.add(axes);
+
+      controls = new OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.target.set(-2, 0, 0);
+      animate();
+    };
+
+    const animate = () => {
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    };
+
+    const isReadyThreeCanvas = () => {
+      return !!scene && !!camera && !!renderer;
+    };
+  
+    const onResizeCanvas = () => {
+      if (!isReadyThreeCanvas()) return;
+  
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(canvasWidth, canvasHeight);
+  
+      camera.aspect = canvasWidth / canvasHeight;
+      camera.updateProjectionMatrix();
+    };
+
+    $: canvasWidth, onResizeCanvas();
+    $: canvasHeight, onResizeCanvas();
+  </script>
+  
+  <div>
+    <Card tight style="width: {width}; height: {height};">
+      {#if $$slots.leftSidebar}
+        <div class="panel">
+            <slot name="leftSidebar" />
+        </div>
+      {/if}
+      <div
+        class="three-canvas-container"
+        bind:clientWidth={canvasWidth}
+        bind:clientHeight={canvasHeight}
+      >
+        <canvas bind:this={canvas} />
+        {#await load_model}
+          <div>
+            <Loading />
+          </div>
+        {:then}
+          <p />
+        {:catch error}
+          <p>Error</p>
+        {/await}
+      </div>
+    </Card>
+  </div>
+  
+  <style>
+    .three-canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+    .panel {
+      z-index: 3;
+      position: absolute;
+      margin: 20px;
+      float: left;
+      width: 20%;
+    }
+  </style>
 ```
-
+### App.svelte
+```diff
+<script>
+	import Header from "./lib/Header.svelte";
+	import Footer from "./lib/Footer.svelte"
++	import Viewer from "./lib/Viewer.svelte";
+</script>
+  
+<main>
+	<Header />
++	<div class="container">
++	  <div class="viewer">
++		<Viewer/>
++	  </div>
++	</div>
+	<div class="footer">
+	  <Footer />
+	</div>
+  </main>
+  
+  <style>
++	.viewer{
++	  z-index: 2;
++	  width: 100%;
++	  height: 100%;
++	}
+  
+	.footer{
+	  float: bottom;
+	  width: 100%;
+	}
+  
+  </style>
+```
+![スクリーンショット 2022-04-07 23 21 31](https://user-images.githubusercontent.com/45413802/162221343-4caef656-19fb-4acd-82b6-984dafd5507a.png)
 # ファイルアップロード機能を追加する
+## 1. sceneを共有する
+- `src/lib`に`key.js`を作成
+### key.js
+```js
+export const key = Symbol();
 ```
+### Viewer.svelte
+```diff
+import rhino3dm from "rhino3dm";
++ import {key as sceneKey} from "./key";
 
-```
-## コントロールを追加
-```
+let canvasWidth;
+let canvasHeight;
+let canvas;
+export let width = "100%";
+export let height = "80vh";
 
++setContext(sceneKey, {
++    getScene: () => scene,
++ });
+
+let scene;
+let camera;
 ```
+## 2. コントロールを追加
+- `src/lib`内に`Panel.svelte`を作成
+### Panel.svelte
+```
+<script>
+    import { getContext } from "svelte";
+    import { Card, FileDropzone } from "attractions";
+    import {
+      MeshNormalMaterial,
+      BufferGeometryLoader,
+      Mesh,
+    } from "three";
+    import rhino3dm from "rhino3dm";
+    import { key as sceneKey} from "./key";
+  
+    let width = "100%";
+    let height = "50vh";
+  
+    const { getScene } = getContext(sceneKey);
+
+    const onChange = (value) => {
+      const scene = getScene();
+      rhino3dm().then(async (m) => {
+        console.log("Loaded rhino3dm.");
+        let rhino = m;
+        value.detail.files.forEach((file) => {
+          read3dmfile(rhino, file, scene);
+        });
+      });
+    };
+  
+    const read3dmfile = async (rhino, file, scene) => {
+      const filePath = URL.createObjectURL(file);
+      let res = await fetch(filePath);
+      let buffer = await res.arrayBuffer();
+      let arr = new Uint8Array(buffer);
+      let doc = rhino.File3dm.fromByteArray(arr);
+      let material = new MeshNormalMaterial();
+  
+      let objects = doc.objects();
+      for (let i = 0; i < objects.count; i++) {
+        let mesh = objects.get(i).geometry();
+        let threeMesh = meshToThreejs(mesh, material);
+        scene.add(threeMesh);
+      }
+    };
+  
+      const meshToThreejs = (mesh, material) => {
+        let loader = new BufferGeometryLoader();
+        var geometry = loader.parse(mesh.toThreejsJSON());
+        return new Mesh(geometry, material);
+      };
+  </script>
+  
+  <Card tight style="width: {width}; height: {height};">
+    <div class="container">
+      <div class="inputs">
+        <FileDropzone accept=".3dm" max={1} on:change={onChange} />
+      </div>
+    </div>
+  </Card>
+  <style>
+    .inputs {
+      margin: 20px;
+    }
+  </style>
+```
+### App.svelte
+```diff
+<script>
+	import Header from "./lib/Header.svelte";
+	import Footer from "./lib/Footer.svelte"
+	import Viewer from "./lib/Viewer.svelte";
++	import Panel from "./lib/Panel.svelte";
+</script>
+  
+<main>
+	<Header />
+	<div class="container">
+	  <div class="viewer">
+-       <Viewer/>
++		<Viewer>
++			<Panel slot="leftSidebar" />
++		</Viewer>
+	  </div>
+	</div>
+	<div class="footer">
+	  <Footer />
+	</div>
+  </main>
+  
+  <style>
+	.viewer{
+	  z-index: 2;
+	  width: 100%;
+	  height: 100%;
+	}
+  
+	.footer{
+	  float: bottom;
+	  width: 100%;
+	}
+  
+  </style>
+```
+![スクリーンショット 2022-04-07 23 20 28](https://user-images.githubusercontent.com/45413802/162221137-4cc13854-ecbd-44d0-a3ab-9a98255fabce.png)
+
 
 # 参考
 https://zenn.dev/masamiki/articles/c9a34119acfd6c

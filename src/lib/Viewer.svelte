@@ -6,25 +6,14 @@
       AxesHelper,
       DirectionalLight,
       GridHelper,
-      Material,
       PerspectiveCamera,
       Scene,
       WebGLRenderer,
-      MeshNormalMaterial,
-      BufferGeometryLoader,
-      BufferGeometry,
-      Mesh,
       Object3D,
     } from "three";
     import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-    import rhino3dm, {
-      File3dm,
-      File3dmObjectTable,
-      RhinoModule,
-      Mesh as rhinoMesh,
-    } from "rhino3dm";
-    import {key as sceneKey} from "./rhinoFile";
-
+    import rhino3dm from "rhino3dm";
+    import {key as sceneKey} from "./key";
   
     let canvasWidth;
     let canvasHeight;
@@ -57,6 +46,7 @@
         resolve();
       });
     });
+
   
     const init = () => {
       // create the Three.js scene

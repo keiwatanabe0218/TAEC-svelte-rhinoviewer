@@ -27,8 +27,8 @@ npm run dev
 # rhino3dmを使う
 ## 1. パッケージをインストール
 ```
-npm i --save-dev rhino3dm three --save-dev
-npm i --save-dev attractions svelte-preprocess sass postcss --save-dev
+npm i rhino3dm three --save-dev
+npm i attractions svelte-preprocess sass postcss --save-dev
 npm i rollup-plugin-node-builtins rollup-plugin-node-globals --save-dev
 ```
 ## 2. wasmを移動

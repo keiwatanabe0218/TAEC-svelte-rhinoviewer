@@ -509,25 +509,25 @@ import { key as sceneKey } from "./key";
 -   let material = new MeshNormalMaterial();
 +   let material = new MeshLambertMaterial( { color: 0xff0000} );
 ```
-```
-  // カラーピッカーが変更された時
-  const onColorChange = (color) => {
-    if (threeMesh) {
-    let hex = rgb2hex([color.detail.r, color.detail.g, color.detail.b]);
-    threeMesh.material.color.setHex(hex);
-    }
-  };
-  // rgbをhexに変換
-  const rgb2hex = (rgb) => {
-    return (
-      "0x" +
-      rgb
-        .map(function (value) {
-          return ("0" + value.toString(16)).slice(-2);
-        })
-        .join("")
-    );
+```js
+// カラーピッカーが変更された時
+const onColorChange = (color) => {
+  if (threeMesh) {
+  let hex = rgb2hex([color.detail.r, color.detail.g, color.detail.b]);
+  threeMesh.material.color.setHex(hex);
   }
+};
+// rgbをhexに変換
+const rgb2hex = (rgb) => {
+  return (
+    "0x" +
+    rgb
+      .map(function (value) {
+        return ("0" + value.toString(16)).slice(-2);
+      })
+      .join("")
+  );
+}
 ```
 ```diff
 <Card tight style="width: {width}; height: {height};">

@@ -9,9 +9,9 @@
 	<Header />
 	<div class="container">
 	  <div class="viewer">
-		<Viewer/>
-			<!-- <Panel slot="leftSidebar" />
-		</Viewer> -->
+		<Viewer>
+			<Panel slot="leftSidebar" />
+		</Viewer>
 	  </div>
 	</div>
 	<div class="footer">

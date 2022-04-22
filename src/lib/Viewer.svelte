@@ -72,10 +72,10 @@
       // 指向性ライトの作成
       const directionalLight = new DirectionalLight(
         lightColor,
-        1
+        0.5
       );
-      directionalLight.position.set(0, 10, 0);
-      directionalLight.target.position.set(-5, 0, 0);
+      directionalLight.position.set(10, 10, 10);
+      directionalLight.target.position.set(0, 0, 0);
       scene.add(directionalLight);
       scene.add(directionalLight.target);
   
@@ -87,6 +87,7 @@
       });
       renderer.setSize(canvasWidth, canvasHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
   
       // create the grid
       // グリッドの生成

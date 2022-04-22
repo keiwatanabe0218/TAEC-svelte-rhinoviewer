@@ -24,7 +24,8 @@ npm run dev
 ```
 <img width="1671" alt="svelte-helloworld" src="https://user-images.githubusercontent.com/45413802/161876725-555240d9-9e7e-4eba-a218-d8cff06e6b37.png">
 
-# rhino3dmを使う
+# attractionsとrhino3dmを使う
+https://illright.github.io/attractions/
 ## 1. パッケージをインストール
 ```
 npm i rhino3dm three --save-dev
@@ -216,10 +217,10 @@ svelte({
   
       const directionalLight = new DirectionalLight(
         lightColor,
-        1
+        0.5
       );
-      directionalLight.position.set(0, 10, 0);
-      directionalLight.target.position.set(-5, 0, 0);
+      directionalLight.position.set(10, 10, 10);
+      directionalLight.target.position.set(0, 0, 0);
       scene.add(directionalLight);
       scene.add(directionalLight.target);
   
@@ -229,6 +230,7 @@ svelte({
       });
       renderer.setSize(canvasWidth, canvasHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
 
       const grid = new GridHelper(50, 30);
       grid.rotateX(Math.PI / 2); 
@@ -386,7 +388,8 @@ let camera;
     import { key as sceneKey} from "./key";
   
     let width = "100%";
-    let height = "50vh";
+    let height = "55vh";
+    let threeMesh;
   
     const { getScene } = getContext(sceneKey);
 
@@ -412,7 +415,7 @@ let camera;
       let objects = doc.objects();
       for (let i = 0; i < objects.count; i++) {
         let mesh = objects.get(i).geometry();
-        let threeMesh = meshToThreejs(mesh, material);
+        threeMesh = meshToThreejs(mesh, material);
         scene.add(threeMesh);
       }
     };
@@ -477,6 +480,67 @@ let camera;
 ```
 ![スクリーンショット 2022-04-07 23 20 28](https://user-images.githubusercontent.com/45413802/162221137-4cc13854-ecbd-44d0-a3ab-9a98255fabce.png)
 
+# カラーピッカーを追加
+## 1. カラーピッカーを追加
+https://github.com/efeskucuk/svelte-color-picker
+```
+npm i svelte-color-picker
+```
+## 2. Panel.svelteを更新
+### Panel.svelte
+```diff
+import {
+      MeshNormalMaterial,
+      BufferGeometryLoader,
+      Mesh,
++     MeshLambertMaterial
+    } from "three";
+import rhino3dm from "rhino3dm";
+import { key as sceneKey } from "./key";
++ import { HsvPicker } from "svelte-color-picker";
+```
+
+```diff
+    const filePath = URL.createObjectURL(file);
+    let res = await fetch(filePath);
+    let buffer = await res.arrayBuffer();
+    let arr = new Uint8Array(buffer);
+    let doc = rhino.File3dm.fromByteArray(arr);
+-   let material = new MeshNormalMaterial();
++   let material = new MeshLambertMaterial( { color: 0xff0000} );
+```
+```js
+// カラーピッカーが変更された時
+const onColorChange = (color) => {
+  if (threeMesh) {
+  let hex = rgb2hex([color.detail.r, color.detail.g, color.detail.b]);
+  threeMesh.material.color.setHex(hex);
+  }
+};
+// rgbをhexに変換
+const rgb2hex = (rgb) => {
+  return (
+    "0x" +
+    rgb
+      .map(function (value) {
+        return ("0" + value.toString(16)).slice(-2);
+      })
+      .join("")
+  );
+}
+```
+```diff
+<Card tight style="width: {width}; height: {height};">
+  <div class="container">
+    <div class="inputs">
+      <FileDropzone accept=".3dm" max={1} on:change={onChange} />
++      <HsvPicker on:colorChange={onColorChange} startColor={"#82EAEA"} />
+    </div>
+  </div>
+</Card>
+```
+<img width="1678" alt="スクリーンショット 2022-04-23 0 20 14" src="https://user-images.githubusercontent.com/45413802/164744574-04054616-c18a-440e-b2b6-9bdc1a010392.png">
 
 # 参考
 https://zenn.dev/masamiki/articles/c9a34119acfd6c
+https://github.com/efeskucuk/svelte-color-picker

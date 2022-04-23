@@ -5,10 +5,15 @@
   import rhino3dm from "rhino3dm";
   import { key as sceneKey } from "./key";
   import { HsvPicker } from "svelte-color-picker";
+  import WireframeCheckbox from "./WireframeCheckbox.svelte";
+  import {storeMaterial} from "./stores.js";
 
   let width = "100%";
   let height = "55vh";
   let material;
+  storeMaterial.subscribe(value => {
+    material = value;
+  });
 
   const { getScene } = getContext(sceneKey);
 
@@ -29,10 +34,9 @@
     let buffer = await res.arrayBuffer();
     let arr = new Uint8Array(buffer);
     let doc = rhino.File3dm.fromByteArray(arr);
-    material = new MeshLambertMaterial( { color: 0xff0000} );
+    // material = new MeshLambertMaterial( { color: 0xff0000} );
 
     let objects = doc.objects();
-    console.log(objects.count)
     for (let i = 0; i < objects.count; i++) {
       let mesh = objects.get(i).geometry();
       let threeMesh = meshToThreejs(mesh, material);
@@ -77,10 +81,7 @@
     <div class="inputs">
       <FileDropzone accept=".3dm" max={1} on:change={onChange} />
       <HsvPicker on:colorChange={onColorChange} startColor={"#82EAEA"} />
-      <label>
-        <input type=checkbox on:change={onCheckboxChange}>
-        Wireframe
-      </label>
+      <WireframeCheckbox />
     </div>
   </div>
 </Card>

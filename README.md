@@ -389,7 +389,7 @@ let camera;
   
     let width = "100%";
     let height = "55vh";
-    let threeMesh;
+    let material;
   
     const { getScene } = getContext(sceneKey);
 
@@ -410,12 +410,12 @@ let camera;
       let buffer = await res.arrayBuffer();
       let arr = new Uint8Array(buffer);
       let doc = rhino.File3dm.fromByteArray(arr);
-      let material = new MeshNormalMaterial();
+      material = new MeshNormalMaterial();
   
       let objects = doc.objects();
       for (let i = 0; i < objects.count; i++) {
         let mesh = objects.get(i).geometry();
-        threeMesh = meshToThreejs(mesh, material);
+        let threeMesh = meshToThreejs(mesh, material);
         scene.add(threeMesh);
       }
     };
@@ -506,15 +506,15 @@ import { key as sceneKey } from "./key";
     let buffer = await res.arrayBuffer();
     let arr = new Uint8Array(buffer);
     let doc = rhino.File3dm.fromByteArray(arr);
--   let material = new MeshNormalMaterial();
-+   let material = new MeshLambertMaterial( { color: 0xff0000} );
+-   material = new MeshNormalMaterial();
++   material = new MeshLambertMaterial( { color: 0xff0000} );
 ```
 ```js
 // カラーピッカーが変更された時
 const onColorChange = (color) => {
-  if (threeMesh) {
+  if (material) {
   let hex = rgb2hex([color.detail.r, color.detail.g, color.detail.b]);
-  threeMesh.material.color.setHex(hex);
+  material.color.setHex(hex);
   }
 };
 // rgbをhexに変換
@@ -540,6 +540,31 @@ const rgb2hex = (rgb) => {
 </Card>
 ```
 <img width="1678" alt="スクリーンショット 2022-04-23 0 20 14" src="https://user-images.githubusercontent.com/45413802/164744574-04054616-c18a-440e-b2b6-9bdc1a010392.png">
+
+# チェックボックスを追加
+### Panel.svelte
+```js
+const onCheckboxChange = (e) => {
+  if (material) {
+    material.wireframe = e.target.checked;
+  }
+};
+```
+```diff
+<Card tight style="width: {width}; height: {height};">
+  <div class="container">
+    <div class="inputs">
+      <FileDropzone accept=".3dm" max={1} on:change={onChange} />
+      <HsvPicker on:colorChange={onColorChange} startColor={"#82EAEA"} />
++      <label>
++        <input type=checkbox on:change={onCheckboxChange}>
++        Wireframe
++      </label>
+    </div>
+  </div>
+</Card>
+```
+<img width="1676" alt="スクリーンショット 2022-04-23 10 48 30" src="https://user-images.githubusercontent.com/45413802/164861894-7e71110f-373a-4975-a20e-4a8c6cd40876.png">
 
 # 参考
 https://zenn.dev/masamiki/articles/c9a34119acfd6c

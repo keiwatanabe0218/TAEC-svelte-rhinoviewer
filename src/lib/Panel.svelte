@@ -1,21 +1,34 @@
 <script>
   import { getContext } from "svelte";
   import { Card, FileDropzone } from "attractions";
-  import { MeshNormalMaterial, BufferGeometryLoader, Mesh, MeshLambertMaterial } from "three";
+  import {
+    MeshNormalMaterial,
+    BufferGeometryLoader,
+    Mesh,
+    MeshLambertMaterial,
+    Vector3,
+    LineBasicMaterial,
+    Line,
+    BufferGeometry,
+  } from "three";
   import rhino3dm from "rhino3dm";
   import { key as sceneKey } from "./key";
   import { HsvPicker } from "svelte-color-picker";
   import WireframeCheckbox from "./WireframeCheckbox.svelte";
-  import {storeMaterial} from "./stores.js";
+  import { storeMaterial } from "./stores.js";
+  import { Rhino3dmLoader } from "three/examples/jsm/loaders/3DMLoader.js";
 
   let width = "100%";
   let height = "55vh";
   let material;
-  storeMaterial.subscribe(value => {
+  storeMaterial.subscribe((value) => {
     material = value;
   });
 
   const { getScene } = getContext(sceneKey);
+
+  const loader = new Rhino3dmLoader();
+  loader.setLibraryPath("/build/");
 
   const onChange = (value) => {
     const scene = getScene();
@@ -32,16 +45,9 @@
     const filePath = URL.createObjectURL(file);
     let res = await fetch(filePath);
     let buffer = await res.arrayBuffer();
-    let arr = new Uint8Array(buffer);
-    let doc = rhino.File3dm.fromByteArray(arr);
-    // material = new MeshLambertMaterial( { color: 0xff0000} );
-
-    let objects = doc.objects();
-    for (let i = 0; i < objects.count; i++) {
-      let mesh = objects.get(i).geometry();
-      let threeMesh = meshToThreejs(mesh, material);
-      scene.add(threeMesh);
-    }
+    loader.parse(buffer, function (object) {
+      scene.add(object);
+    });
   };
 
   const meshToThreejs = (mesh, material) => {
@@ -52,8 +58,8 @@
 
   const onColorChange = (color) => {
     if (material) {
-    let hex = rgb2hex([color.detail.r, color.detail.g, color.detail.b]);
-    material.color.setHex(hex);
+      let hex = rgb2hex([color.detail.r, color.detail.g, color.detail.b]);
+      material.color.setHex(hex);
     }
   };
 
@@ -66,14 +72,13 @@
         })
         .join("")
     );
-  }
+  };
 
   const onCheckboxChange = (e) => {
     if (material) {
       material.wireframe = e.target.checked;
     }
   };
-
 </script>
 
 <Card tight style="width: {width}; height: {height};">

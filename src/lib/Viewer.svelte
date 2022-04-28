@@ -12,6 +12,7 @@
       Object3D,
     } from "three";
     import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+    import { Rhino3dmLoader } from "three/examples/jsm/loaders/3DMLoader.js";
     import rhino3dm from "rhino3dm";
     import {key as sceneKey} from "./key";
   
@@ -39,7 +40,7 @@
   
     const load_model = new Promise((resolve, reject) => {
       rhino3dm().then(async (m) => {
-        await _sleep(2000);
+        await _sleep(2);
         console.log("Loaded rhino3dm.");
         let rhino = m;
         await init();
